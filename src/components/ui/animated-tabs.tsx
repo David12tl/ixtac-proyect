@@ -12,8 +12,9 @@ interface AnimatedTabsProps {
 }
 
 const TAB_ROUTES: Record<string, string> = {
-  Todos: "/page",
+  Todos: "/",
   Aventura: "/Aventura",
+  Marketplace: "/Marketplace",
   Senderismo: "/Senderismo",
   Cultura: "/Cultura",
   Gastronomía: "/Gastronomía",
