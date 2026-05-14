@@ -9,6 +9,10 @@ const nextConfig = {
         pathname: '**',
       },
       {
+        protocol: 'https',
+        hostname: 'www.google.com',
+      },
+      {
         protocol: 'http',
         hostname: 'googleusercontent.com',
         pathname: '**',

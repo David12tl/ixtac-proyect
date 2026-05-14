@@ -15,7 +15,7 @@ import {
   Heart
 } from 'lucide-react';
 
-const TABS = ["Todos", "Aventura", "Marketplace", "Senderismo", "Cultura"];
+const TABS = ["Todos", "Aventura", "Marketplace", "Sabores", "Chatbot", "Login"];
 
 const PRODUCTS = [
   {
@@ -86,7 +86,7 @@ export default function MarketplacePage() {
                     <ShoppingBag size={18} />
                 </button>
             
-      </nav>
+        </nav>
 
       <main className="max-w-7xl mx-auto px-8">
         

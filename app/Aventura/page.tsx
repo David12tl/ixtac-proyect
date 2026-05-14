@@ -20,7 +20,7 @@ import {
   Users
 } from 'lucide-react';
 
-const TABS = ["Todos", "Aventura", "Marketplace", "Senderismo", "Cultura"];
+const TABS = ["Todos", "Aventura", "Marketplace", "Sabores", "Chatbot", "Inicio de sesión"];
 
 const GALLERY_IMAGES = [
   'https://images.beta.cosmos.so/e5ebb6f8-8202-40ec-bc70-976f81153501?format=jpeg',
