@@ -18,7 +18,9 @@ import {
   ArrowRight,
   Search,
   Users,
-  MapPin
+  MapPin,
+  Route,
+  Plus
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
@@ -30,6 +32,19 @@ const GeolocationMap = dynamic(
     loading: () => (
       <div className="h-[500px] w-full rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/10">
         <div className="text-white/70 animate-pulse">Cargando mapa...</div>
+      </div>
+    )
+  }
+);
+
+// Dynamic import for Interactive Routes Map
+const InteractiveRoutesMap = dynamic(
+  () => import('../../src/components/InteractiveRoutesMap'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-[500px] w-full rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/10">
+        <div className="text-white/70 animate-pulse">Cargando mapa de rutas...</div>
       </div>
     )
   }
@@ -188,6 +203,56 @@ export default function AventuraPage() {
               <p className="text-white/40 text-sm">
                 El mapa se centrará automáticamente en tu ubicación cuando otorgues permisos de geolocalización.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* RUTAS INTERACTIVAS */}
+        <section className="py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Route className="text-[#d4e9c7]" size={28} />
+                <span className="text-[10px] font-black text-[#d4e9c7] uppercase tracking-[0.3em] bg-white/5 border border-white/10 px-4 py-2 rounded-full">
+                  Rutas Interactivas
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-6">
+                Crea y Comparte tus Rutas
+              </h2>
+              <p className="text-white/60 text-lg font-serif italic max-w-2xl mx-auto">
+                Diseña tu propia aventura marcando puntos de interés turístico. Agrega alojamientos, restaurantes, sitios de aventura y más.
+              </p>
+            </div>
+            
+            <InteractiveRoutesMap 
+              center={[18.6533, -96.8267]}
+              zoom={13}
+              className="h-[550px] w-full rounded-3xl"
+            />
+            
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 bg-[#3B82F6]/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🏨</span>
+                </div>
+                <h4 className="text-white font-bold mb-2">Alojamiento</h4>
+                <p className="text-white/50 text-sm">Marca hoteles, cabañas y lugares para hospedarte</p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 bg-[#F59E0B]/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🍽️</span>
+                </div>
+                <h4 className="text-white font-bold mb-2">Restaurantes</h4>
+                <p className="text-white/50 text-sm">Registra los mejores lugares para comer</p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 bg-[#10B981]/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🥾</span>
+                </div>
+                <h4 className="text-white font-bold mb-2">Aventura</h4>
+                <p className="text-white/50 text-sm">Señala cascadas, miradores y senderos</p>
+              </div>
             </div>
           </div>
         </section>
