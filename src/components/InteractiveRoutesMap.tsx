@@ -5,50 +5,48 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icon in Leaflet
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-// Custom icons for different service types
 const createCustomIcon = (color: string, type: string) => {
   return L.divIcon({
     className: "custom-marker",
     html: `
       <div style="
-        background-color: ${color};
-        width: 32px;
-        height: 32px;
+        background: linear-gradient(135deg, ${color}ee, ${color}99);
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        font-size: 14px;
+        border: 2.5px solid rgba(255,255,255,0.8);
+        box-shadow: 0 4px 16px ${color}55, 0 0 0 4px ${color}22;
+        font-size: 15px;
+        backdrop-filter: blur(8px);
       ">
         ${type}
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
   });
 };
 
 const SERVICE_ICONS: Record<string, { color: string; emoji: string }> = {
-  alojamiento: { color: "#3B82F6", emoji: "🏨" },
-  restaurante: { color: "#F59E0B", emoji: "🍽️" },
-  aventura: { color: "#10B981", emoji: "🥾" },
-  cultura: { color: "#8B5CF6", emoji: "🏛️" },
-  naturaleza: { color: "#22C55E", emoji: "🌿" },
-  transporte: { color: "#EF4444", emoji: "🚗" },
-  otros: { color: "#6B7280", emoji: "📍" },
+  alojamiento: { color: "#60A5FA", emoji: "🏨" },
+  restaurante:  { color: "#FBBF24", emoji: "🍽️" },
+  aventura:     { color: "#34D399", emoji: "🥾" },
+  cultura:      { color: "#A78BFA", emoji: "🏛️" },
+  naturaleza:   { color: "#86EFAC", emoji: "🌿" },
+  transporte:   { color: "#F87171", emoji: "🚗" },
+  otros:        { color: "#94A3B8", emoji: "📍" },
 };
 
-// Service type options
 const SERVICE_TYPES = [
   { value: "alojamiento", label: "Alojamiento" },
   { value: "restaurante", label: "Restaurante" },
@@ -59,76 +57,49 @@ const SERVICE_TYPES = [
   { value: "otros", label: "Otros" },
 ];
 
-// Map event handler for clicking to add waypoints
 function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click: (e) => {
-      onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
+  useMapEvents({ click: (e) => { onMapClick(e.latlng.lat, e.latlng.lng); } });
   return null;
 }
 
-// Component to fit bounds when waypoints change
 function FitBounds({ waypoints }: { waypoints: Waypoint[] }) {
   const map = useMap();
-  
   useEffect(() => {
     if (waypoints.length >= 2) {
-      const bounds = waypoints.map(w => [w.lat, w.lng] as [number, number]);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(waypoints.map(w => [w.lat, w.lng] as [number, number]), { padding: [50, 50] });
     } else if (waypoints.length === 1) {
       map.setView([waypoints[0].lat, waypoints[0].lng], 14);
     }
   }, [waypoints, map]);
-  
   return null;
 }
 
-// Calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Calculate total route distance
 function calculateTotalDistance(waypoints: Waypoint[]): number {
   let total = 0;
   for (let i = 0; i < waypoints.length - 1; i++) {
-    total += calculateDistance(
-      waypoints[i].lat,
-      waypoints[i].lng,
-      waypoints[i + 1].lat,
-      waypoints[i + 1].lng
-    );
+    total += calculateDistance(waypoints[i].lat, waypoints[i].lng, waypoints[i + 1].lat, waypoints[i + 1].lng);
   }
   return total;
 }
 
 export interface Waypoint {
-  id: string;
-  lat: number;
-  lng: number;
-  name: string;
-  description: string;
-  serviceType: string;
+  id: string; lat: number; lng: number;
+  name: string; description: string; serviceType: string;
 }
 
 export interface SavedRoute {
-  id: string;
-  name: string;
-  waypoints: Waypoint[];
-  createdAt: Date;
-  color: string;
+  id: string; name: string; waypoints: Waypoint[];
+  createdAt: Date; color: string;
 }
 
 interface InteractiveRoutesMapProps {
@@ -140,40 +111,36 @@ interface InteractiveRoutesMapProps {
   onWaypointsChange?: (waypoints: Waypoint[]) => void;
 }
 
+// ── Glass panel helper ───────────────────────────────────────────────────────
+const glass = {
+  panel:  "bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+  card:   "bg-white/[0.04] backdrop-blur-xl border border-white/[0.08]",
+  input:  "bg-white/[0.07] border border-white/[0.15] rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#86efac]/60 focus:bg-white/[0.10] transition-all duration-200",
+  btnPrimary: "bg-gradient-to-r from-[#86efac] to-[#4ade80] text-[#052e16] font-bold rounded-full px-6 py-3 text-sm hover:shadow-[0_0_24px_rgba(134,239,172,0.5)] hover:scale-[1.03] active:scale-95 transition-all duration-200",
+  btnGhost:   "bg-white/[0.07] border border-white/[0.12] text-white/80 font-medium rounded-full px-6 py-3 text-sm hover:bg-white/[0.14] hover:text-white active:scale-95 transition-all duration-200",
+};
+
 export default function InteractiveRoutesMap({
   center = [18.6533, -96.8267],
   zoom = 13,
-  className = "h-[500px] w-full rounded-3xl",
+  className = "h-[520px] w-full",
   initialWaypoints = [],
   savedRoutes = [],
   onWaypointsChange,
 }: InteractiveRoutesMapProps) {
-  const [mounted, setMounted] = useState(false);
-  const [waypoints, setWaypoints] = useState<Waypoint[]>(initialWaypoints);
-  const [routes, setRoutes] = useState<SavedRoute[]>(savedRoutes);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newWaypoint, setNewWaypoint] = useState<{ lat: number; lng: number } | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    serviceType: "otros",
-  });
+  const [mounted, setMounted]           = useState(false);
+  const [waypoints, setWaypoints]       = useState<Waypoint[]>(initialWaypoints);
+  const [routes, setRoutes]             = useState<SavedRoute[]>(savedRoutes);
+  const [showAddForm, setShowAddForm]   = useState(false);
+  const [newWaypoint, setNewWaypoint]   = useState<{ lat: number; lng: number } | null>(null);
+  const [formData, setFormData]         = useState({ name: "", description: "", serviceType: "otros" });
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [showRouteList, setShowRouteList] = useState(false);
-  const [routeName, setRouteName] = useState("");
+  const [routeName, setRouteName]       = useState("");
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (onWaypointsChange) {
-      onWaypointsChange(waypoints);
-    }
-  }, [waypoints, onWaypointsChange]);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 0); return () => clearTimeout(t); }, []);
+  useEffect(() => { onWaypointsChange?.(waypoints); }, [waypoints, onWaypointsChange]);
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     setNewWaypoint({ lat, lng });
@@ -183,365 +150,444 @@ export default function InteractiveRoutesMap({
 
   const handleAddWaypoint = () => {
     if (!newWaypoint || !formData.name.trim()) return;
-
-    const newPoint: Waypoint = {
-      id: Date.now().toString(),
-      lat: newWaypoint.lat,
-      lng: newWaypoint.lng,
-      name: formData.name,
-      description: formData.description,
-      serviceType: formData.serviceType,
-    };
-
-    setWaypoints([...waypoints, newPoint]);
-    setShowAddForm(false);
-    setNewWaypoint(null);
+    setWaypoints(prev => [...prev, {
+      id: Date.now().toString(), lat: newWaypoint.lat, lng: newWaypoint.lng,
+      name: formData.name, description: formData.description, serviceType: formData.serviceType,
+    }]);
+    setShowAddForm(false); setNewWaypoint(null);
   };
 
-  const handleRemoveWaypoint = (id: string) => {
-    setWaypoints(waypoints.filter(w => w.id !== id));
-  };
+  const handleRemoveWaypoint = (id: string) => setWaypoints(prev => prev.filter(w => w.id !== id));
 
   const handleSaveRoute = () => {
     if (waypoints.length < 2 || !routeName.trim()) return;
-
-    const colors = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#EC4899"];
-    const newRoute: SavedRoute = {
-      id: Date.now().toString(),
-      name: routeName,
-      waypoints: [...waypoints],
-      createdAt: new Date(),
-      color: colors[routes.length % colors.length],
-    };
-
-    setRoutes([...routes, newRoute]);
-    setRouteName("");
-    setSelectedRoute(newRoute.id);
+    const colors = ["#60A5FA","#34D399","#FBBF24","#A78BFA","#F87171","#EC4899"];
+    setRoutes(prev => {
+      const r: SavedRoute = {
+        id: Date.now().toString(), name: routeName, waypoints: [...waypoints],
+        createdAt: new Date(), color: colors[prev.length % colors.length],
+      };
+      return [...prev, r];
+    });
+    setRouteName(""); setSaveModalOpen(false);
   };
 
   const handleLoadRoute = (route: SavedRoute) => {
-    setWaypoints(route.waypoints);
-    setSelectedRoute(route.id);
-    setShowRouteList(false);
+    setWaypoints(route.waypoints); setSelectedRoute(route.id); setShowRouteList(false);
   };
 
   const handleDeleteRoute = (id: string) => {
-    setRoutes(routes.filter(r => r.id !== id));
+    setRoutes(prev => prev.filter(r => r.id !== id));
     if (selectedRoute === id) setSelectedRoute(null);
-  };
-
-  const handleClearWaypoints = () => {
-    setWaypoints([]);
-    setSelectedRoute(null);
   };
 
   const totalDistance = calculateTotalDistance(waypoints);
 
-  if (!mounted) {
-    return (
-      <div className={`${className} bg-white/10 backdrop-blur-xl flex items-center justify-center`}>
-        <div className="text-white/70 animate-pulse">Cargando mapa interactivo...</div>
+  if (!mounted) return (
+    <div className={`${glass.panel} rounded-[32px] flex items-center justify-center h-[600px]`}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-[#86efac]/40 border-t-[#86efac] rounded-full animate-spin" />
+        <p className="text-white/40 text-sm tracking-widest uppercase font-light">Iniciando mapa</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="relative">
-      {/* Map */}
-      <div className="bg-white/5 backdrop-blur-xl p-4 rounded-[40px] border border-white/10 shadow-2xl">
-        <MapContainer
-          center={center}
-          zoom={zoom}
-          className={className}
-          style={{ borderRadius: "24px", overflow: "hidden" }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          <MapClickHandler onMapClick={handleMapClick} />
-          <FitBounds waypoints={waypoints} />
+    <>
+      {/* ── GLOBAL STYLES ─────────────────────────────────────────────────── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap');
 
-          {/* Render waypoints */}
-          {waypoints.map((waypoint) => {
-            const iconConfig = SERVICE_ICONS[waypoint.serviceType] || SERVICE_ICONS.otros;
-            return (
-              <Marker
-                key={waypoint.id}
-                position={[waypoint.lat, waypoint.lng]}
-                icon={createCustomIcon(iconConfig.color, iconConfig.emoji)}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h4 className="font-bold text-gray-800 text-lg">{waypoint.name}</h4>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded-full inline-block mt-1">
-                      {SERVICE_TYPES.find(t => t.value === waypoint.serviceType)?.label || waypoint.serviceType}
-                    </span>
-                    {waypoint.description && (
-                      <p className="text-sm text-gray-600 mt-2">{waypoint.description}</p>
-                    )}
-                    <button
-                      onClick={() => handleRemoveWaypoint(waypoint.id)}
-                      className="mt-3 text-red-500 text-sm hover:underline"
-                    >
-                      Eliminar punto
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+        .rim-map-root * { font-family: 'DM Sans', sans-serif; }
+        .rim-map-root .display-font { font-family: 'Syne', sans-serif; }
 
-          {/* Render route polyline */}
-          {waypoints.length >= 2 && (
-            <Polyline
-              positions={waypoints.map(w => [w.lat, w.lng] as [number, number])}
-              color="#d4e9c7"
-              weight={4}
-              opacity={0.8}
-              dashArray="10, 10"
-            />
-          )}
+        .leaflet-popup-content-wrapper {
+          background: rgba(10,20,15,0.85) !important;
+          backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(255,255,255,0.12) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+          color: white !important;
+        }
+        .leaflet-popup-tip { background: rgba(10,20,15,0.85) !important; }
+        .leaflet-popup-content { color: white !important; }
+        .leaflet-container { font-family: 'DM Sans', sans-serif !important; }
+        .custom-marker { background: transparent; border: none; }
 
-          {/* Render saved routes */}
-          {routes.map((route) => (
-            <Polyline
-              key={route.id}
-              positions={route.waypoints.map(w => [w.lat, w.lng] as [number, number])}
-              color={selectedRoute === route.id ? route.color : `${route.color}40`}
-              weight={selectedRoute === route.id ? 5 : 3}
-              opacity={selectedRoute === route.id ? 0.9 : 0.4}
-            />
-          ))}
-        </MapContainer>
-      </div>
+        .rim-stat-card {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 20px;
+          padding: 16px 24px;
+          display: flex; flex-direction: column; gap: 4px;
+          transition: background 0.2s;
+        }
+        .rim-stat-card:hover { background: rgba(255,255,255,0.07); }
 
-      {/* Info Panel */}
-      <div className="mt-4 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <div>
-              <p className="text-white/50 text-xs uppercase tracking-wider">Puntos en ruta</p>
-              <p className="text-white font-bold text-2xl">{waypoints.length}</p>
-            </div>
-            <div>
-              <p className="text-white/50 text-xs uppercase tracking-wider">Distancia total</p>
-              <p className="text-white font-bold text-2xl">{totalDistance.toFixed(1)} km</p>
-            </div>
-            <div>
-              <p className="text-white/50 text-xs uppercase tracking-wider">Rutas guardadas</p>
-              <p className="text-white font-bold text-2xl">{routes.length}</p>
-            </div>
+        .rim-modal-overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.65);
+          backdrop-filter: blur(12px);
+          z-index: 1000;
+          display: flex; align-items: center; justify-content: center; padding: 16px;
+          animation: rimFadeIn 0.2s ease;
+        }
+        .rim-modal {
+          background: rgba(8,18,12,0.92);
+          backdrop-filter: blur(32px);
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 28px;
+          padding: 36px;
+          max-width: 440px; width: 100%;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(134,239,172,0.06);
+          animation: rimSlideUp 0.25s ease;
+        }
+        @keyframes rimFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes rimSlideUp { from { transform: translateY(12px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+        .rim-sidebar {
+          position: fixed; inset-y: 0; right: 0;
+          width: min(400px, 100vw);
+          background: rgba(5,14,9,0.90);
+          backdrop-filter: blur(32px);
+          border-left: 1px solid rgba(255,255,255,0.08);
+          z-index: 999;
+          overflow-y: auto;
+          box-shadow: -8px 0 40px rgba(0,0,0,0.5);
+          animation: rimSlideLeft 0.28s ease;
+        }
+        @keyframes rimSlideLeft { from { transform: translateX(20px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+
+        .rim-route-card {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 18px; padding: 16px;
+          cursor: pointer; transition: all 0.2s;
+        }
+        .rim-route-card:hover { background: rgba(255,255,255,0.08); }
+        .rim-route-card.active {
+          border-color: rgba(134,239,172,0.5);
+          background: rgba(134,239,172,0.06);
+          box-shadow: 0 0 0 1px rgba(134,239,172,0.15);
+        }
+
+        select.rim-select option {
+          background: #0a120c;
+          color: white;
+        }
+
+        .rim-tag {
+          font-size: 10px; font-weight: 500; letter-spacing: 0.05em;
+          background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55);
+          border-radius: 999px; padding: 3px 10px;
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .rim-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          display: inline-block; margin-right: 6px;
+        }
+      `}} />
+
+      {/* ── ROOT ──────────────────────────────────────────────────────────── */}
+      <div className="rim-map-root flex flex-col gap-4">
+
+        {/* ── MAP CARD ──────────────────────────────────────────────────── */}
+        <div className={`${glass.panel} rounded-[32px] overflow-hidden relative`}>
+
+          {/* Corner badge */}
+          <div className="absolute top-4 left-4 z-[500] flex items-center gap-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2">
+            <span className="w-2 h-2 rounded-full bg-[#86efac] animate-pulse inline-block" />
+            <span className="display-font text-white/80 text-xs font-semibold tracking-wider uppercase">Modo edición</span>
           </div>
-          
-          <div className="flex gap-3">
+
+          {/* Hint badge */}
+          <div className="absolute top-4 right-4 z-[500] bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2">
+            <span className="text-white/50 text-xs">Toca el mapa para agregar puntos</span>
+          </div>
+
+          <MapContainer
+            center={center} zoom={zoom}
+            style={{ height: "520px", width: "100%", borderRadius: "0" }}
+            className={className}
+          >
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapClickHandler onMapClick={handleMapClick} />
+            <FitBounds waypoints={waypoints} />
+
+            {waypoints.map((wp) => {
+              const icon = SERVICE_ICONS[wp.serviceType] || SERVICE_ICONS.otros;
+              return (
+                <Marker key={wp.id} position={[wp.lat, wp.lng]} icon={createCustomIcon(icon.color, icon.emoji)}>
+                  <Popup>
+                    <div style={{ minWidth: 200, padding: "4px 0" }}>
+                      <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 15, color: "white", margin: "0 0 6px" }}>
+                        {wp.name}
+                      </p>
+                      <span style={{
+                        fontSize: 10, background: "rgba(134,239,172,0.15)", color: "#86efac",
+                        borderRadius: 999, padding: "2px 10px", border: "1px solid rgba(134,239,172,0.3)",
+                        letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
+                      }}>
+                        {SERVICE_TYPES.find(t => t.value === wp.serviceType)?.label}
+                      </span>
+                      {wp.description && (
+                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 8, lineHeight: 1.5 }}>{wp.description}</p>
+                      )}
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 6, fontFamily: "monospace" }}>
+                        {wp.lat.toFixed(5)}, {wp.lng.toFixed(5)}
+                      </p>
+                      <button
+                        onClick={() => handleRemoveWaypoint(wp.id)}
+                        style={{
+                          marginTop: 10, background: "rgba(248,113,113,0.12)", color: "#f87171",
+                          border: "1px solid rgba(248,113,113,0.3)", borderRadius: 999,
+                          padding: "4px 14px", fontSize: 11, cursor: "pointer", width: "100%",
+                          transition: "background 0.2s",
+                        }}
+                      >
+                        Eliminar punto
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+
             {waypoints.length >= 2 && (
-              <button
-                onClick={handleSaveRoute}
-                className="bg-[#d4e9c7] text-[#1b3022] px-6 py-3 rounded-full font-bold text-sm hover:bg-white transition-all"
-              >
-                Guardar Ruta
+              <Polyline
+                positions={waypoints.map(w => [w.lat, w.lng] as [number, number])}
+                color="#86efac" weight={3} opacity={0.7} dashArray="8, 8"
+              />
+            )}
+
+            {routes.map(route => (
+              <Polyline
+                key={route.id}
+                positions={route.waypoints.map(w => [w.lat, w.lng] as [number, number])}
+                color={route.color}
+                weight={selectedRoute === route.id ? 5 : 2}
+                opacity={selectedRoute === route.id ? 0.85 : 0.35}
+              />
+            ))}
+          </MapContainer>
+        </div>
+
+        {/* ── STATS + ACTIONS ───────────────────────────────────────────── */}
+        <div className={`${glass.panel} rounded-[28px] px-6 py-5 flex flex-wrap items-center justify-between gap-4`}>
+
+          {/* Stats */}
+          <div className="flex gap-3 flex-wrap">
+            {[
+              { label: "Puntos", value: waypoints.length, unit: "" },
+              { label: "Distancia", value: totalDistance.toFixed(1), unit: " km" },
+              { label: "Rutas", value: routes.length, unit: "" },
+            ].map(s => (
+              <div key={s.label} className="rim-stat-card">
+                <span className="text-white/35 text-[10px] uppercase tracking-widest font-medium">{s.label}</span>
+                <span className="display-font text-white text-2xl font-bold leading-none">{s.value}<span className="text-sm text-white/40 font-normal">{s.unit}</span></span>
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="hidden md:flex items-center gap-3 flex-wrap">
+            {Object.entries(SERVICE_ICONS).slice(0, 5).map(([key, val]) => (
+              <span key={key} className="flex items-center gap-1.5 text-[11px] text-white/40">
+                <span className="rim-dot" style={{ background: val.color }} />
+                {SERVICE_TYPES.find(t => t.value === key)?.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {waypoints.length >= 2 && (
+              <button onClick={() => setSaveModalOpen(true)} className={glass.btnPrimary}>
+                Guardar ruta
               </button>
             )}
             {waypoints.length > 0 && (
-              <button
-                onClick={handleClearWaypoints}
-                className="bg-white/10 text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-white/20 transition-all"
-              >
+              <button onClick={() => { setWaypoints([]); setSelectedRoute(null); }} className={glass.btnGhost}>
                 Limpiar
               </button>
             )}
-            <button
-              onClick={() => setShowRouteList(!showRouteList)}
-              className="bg-white/10 text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-white/20 transition-all"
-            >
-              {showRouteList ? "Ocultar Rutas" : "Ver Rutas"}
+            <button onClick={() => setShowRouteList(v => !v)} className={glass.btnGhost}>
+              {showRouteList ? "Cerrar panel" : `Mis rutas ${routes.length > 0 ? `(${routes.length})` : ""}`}
             </button>
           </div>
         </div>
+
+        {/* Waypoint list mini */}
+        {waypoints.length > 0 && (
+          <div className={`${glass.panel} rounded-[24px] px-6 py-4`}>
+            <p className="display-font text-white/40 text-[10px] uppercase tracking-widest mb-3">Puntos actuales</p>
+            <div className="flex flex-wrap gap-2">
+              {waypoints.map((wp, i) => {
+                const icon = SERVICE_ICONS[wp.serviceType] || SERVICE_ICONS.otros;
+                return (
+                  <span key={wp.id} className="flex items-center gap-1.5 bg-white/[0.06] border border-white/[0.08] rounded-full px-3 py-1.5 text-xs text-white/70">
+                    <span style={{ color: icon.color }}>{icon.emoji}</span>
+                    <span className="text-white/30 text-[10px]">{i + 1}.</span>
+                    {wp.name}
+                    <button onClick={() => handleRemoveWaypoint(wp.id)} className="ml-1 text-white/20 hover:text-red-400 transition-colors">×</button>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Add Waypoint Modal */}
+      {/* ── ADD WAYPOINT MODAL ─────────────────────────────────────────────── */}
       {showAddForm && newWaypoint && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-          <div className="bg-[#1a2e1a] rounded-3xl border border-white/10 p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-2xl font-bold text-white mb-6">Agregar Punto de Interés</h3>
-            
-            <div className="space-y-4">
+        <div className="rim-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowAddForm(false); setNewWaypoint(null); } }}>
+          <div className="rim-modal">
+            <div className="flex items-center gap-3 mb-7">
+              <div className="w-10 h-10 rounded-2xl bg-[#86efac]/10 border border-[#86efac]/20 flex items-center justify-center text-lg">📍</div>
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Nombre del lugar *</label>
+                <h3 className="display-font text-white font-bold text-xl leading-none">Nuevo punto</h3>
+                <p className="text-white/35 text-xs mt-1 font-mono">{newWaypoint.lat.toFixed(5)}, {newWaypoint.lng.toFixed(5)}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-white/50 text-xs uppercase tracking-wider mb-2 block font-medium">Nombre *</label>
                 <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#d4e9c7] transition-colors"
+                  type="text" value={formData.name} autoFocus
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className={`w-full ${glass.input}`}
                   placeholder="Ej: Mirador El Salto"
+                  onKeyDown={e => e.key === "Enter" && handleAddWaypoint()}
                 />
               </div>
 
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Tipo de servicio</label>
+                <label className="text-white/50 text-xs uppercase tracking-wider mb-2 block font-medium">Tipo</label>
                 <select
                   value={formData.serviceType}
-                  onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#d4e9c7] transition-colors"
+                  onChange={e => setFormData({ ...formData, serviceType: e.target.value })}
+                  className={`w-full rim-select ${glass.input}`}
+                  style={{ background: "rgba(255,255,255,0.07)" }}
                 >
-                  {SERVICE_TYPES.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
+                  {SERVICE_TYPES.map(t => <option key={t.value} value={t.value}>{SERVICE_ICONS[t.value]?.emoji} {t.label}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Descripción</label>
+                <label className="text-white/50 text-xs uppercase tracking-wider mb-2 block font-medium">Descripción</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#d4e9c7] transition-colors resize-none"
-                  rows={3}
-                  placeholder="Describe el lugar o servicio..."
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className={`w-full ${glass.input} resize-none`} rows={3}
+                  placeholder="Describe el lugar o servicio…"
                 />
-              </div>
-
-              <div className="bg-white/5 rounded-xl p-4">
-                <p className="text-white/50 text-xs">Coordenadas</p>
-                <p className="text-white font-mono text-sm">
-                  {newWaypoint.lat.toFixed(6)}, {newWaypoint.lng.toFixed(6)}
-                </p>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  setNewWaypoint(null);
-                }}
-                className="flex-1 bg-white/10 text-white py-3 rounded-full font-bold hover:bg-white/20 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAddWaypoint}
-                className="flex-1 bg-[#d4e9c7] text-[#1b3022] py-3 rounded-full font-bold hover:bg-white transition-all"
-              >
-                Agregar
-              </button>
+            <div className="flex gap-3 mt-7">
+              <button onClick={() => { setShowAddForm(false); setNewWaypoint(null); }} className={`flex-1 ${glass.btnGhost}`}>Cancelar</button>
+              <button onClick={handleAddWaypoint} disabled={!formData.name.trim()} className={`flex-1 ${glass.btnPrimary} disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none`}>Agregar punto</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Save Route Modal */}
-      {routeName && waypoints.length >= 2 && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-          <div className="bg-[#1a2e1a] rounded-3xl border border-white/10 p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-2xl font-bold text-white mb-6">Guardar Ruta</h3>
-            
-            <div className="space-y-4">
+      {/* ── SAVE ROUTE MODAL ───────────────────────────────────────────────── */}
+      {saveModalOpen && (
+        <div className="rim-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSaveModalOpen(false); }}>
+          <div className="rim-modal">
+            <div className="flex items-center gap-3 mb-7">
+              <div className="w-10 h-10 rounded-2xl bg-[#86efac]/10 border border-[#86efac]/20 flex items-center justify-center text-lg">🗺️</div>
+              <h3 className="display-font text-white font-bold text-xl">Guardar ruta</h3>
+            </div>
+
+            <div className="flex flex-col gap-4">
               <div>
-                <label className="text-white/70 text-sm mb-2 block">Nombre de la ruta *</label>
+                <label className="text-white/50 text-xs uppercase tracking-wider mb-2 block font-medium">Nombre de la ruta *</label>
                 <input
-                  type="text"
-                  value={routeName}
-                  onChange={(e) => setRouteName(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#d4e9c7] transition-colors"
+                  type="text" value={routeName} autoFocus
+                  onChange={e => setRouteName(e.target.value)}
+                  className={`w-full ${glass.input}`}
                   placeholder="Ej: Ruta de las Cascadas"
-                  autoFocus
+                  onKeyDown={e => e.key === "Enter" && handleSaveRoute()}
                 />
               </div>
 
-              <div className="bg-white/5 rounded-xl p-4 space-y-2">
-                <p className="text-white/50 text-xs">Resumen de la ruta</p>
-                <p className="text-white text-sm">• {waypoints.length} puntos de interés</p>
-                <p className="text-white text-sm">• {totalDistance.toFixed(1)} km totales</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {waypoints.slice(0, 4).map((w, i) => (
-                    <span key={w.id} className="text-xs bg-white/10 px-2 py-1 rounded-full text-white/70">
-                      {i + 1}. {w.name}
-                    </span>
-                  ))}
-                  {waypoints.length > 4 && (
-                    <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-white/70">
-                      +{waypoints.length - 4} más
-                    </span>
-                  )}
+              <div className="bg-white/[0.04] border border-white/[0.07] rounded-2xl p-4 space-y-3">
+                <p className="text-white/35 text-[10px] uppercase tracking-widest font-medium">Resumen</p>
+                <div className="flex gap-4">
+                  <div><p className="text-white font-bold text-lg">{waypoints.length}</p><p className="text-white/35 text-xs">puntos</p></div>
+                  <div className="w-px bg-white/10" />
+                  <div><p className="text-white font-bold text-lg">{totalDistance.toFixed(1)} km</p><p className="text-white/35 text-xs">distancia</p></div>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {waypoints.slice(0, 5).map((w, i) => {
+                    const icon = SERVICE_ICONS[w.serviceType] || SERVICE_ICONS.otros;
+                    return <span key={w.id} className="rim-tag">{icon.emoji} {w.name}</span>;
+                  })}
+                  {waypoints.length > 5 && <span className="rim-tag">+{waypoints.length - 5}</span>}
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                onClick={() => setRouteName("")}
-                className="flex-1 bg-white/10 text-white py-3 rounded-full font-bold hover:bg-white/20 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSaveRoute}
-                className="flex-1 bg-[#d4e9c7] text-[#1b3022] py-3 rounded-full font-bold hover:bg-white transition-all"
-              >
-                Guardar
-              </button>
+            <div className="flex gap-3 mt-7">
+              <button onClick={() => setSaveModalOpen(false)} className={`flex-1 ${glass.btnGhost}`}>Cancelar</button>
+              <button onClick={handleSaveRoute} disabled={!routeName.trim()} className={`flex-1 ${glass.btnPrimary} disabled:opacity-40 disabled:cursor-not-allowed`}>Guardar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Routes List Panel */}
+      {/* ── SIDEBAR: ROUTES LIST ───────────────────────────────────────────── */}
       {showRouteList && (
-        <div className="fixed inset-y-0 right-0 w-full md:w-96 bg-[#1a2e1a] border-l border-white/10 z-[999] shadow-2xl overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Rutas Guardadas</h3>
-              <button
-                onClick={() => setShowRouteList(false)}
-                className="text-white/50 hover:text-white transition-colors"
-              >
+        <div className="rim-sidebar">
+          <div className="p-7">
+            <div className="flex items-center justify-between mb-7">
+              <div>
+                <h3 className="display-font text-white font-bold text-xl leading-none">Mis rutas</h3>
+                <p className="text-white/35 text-xs mt-1">{routes.length} ruta{routes.length !== 1 ? "s" : ""} guardada{routes.length !== 1 ? "s" : ""}</p>
+              </div>
+              <button onClick={() => setShowRouteList(false)} className="w-9 h-9 rounded-full bg-white/[0.07] border border-white/[0.10] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.14] transition-all">
                 ✕
               </button>
             </div>
 
             {routes.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-white/30">No hay rutas guardadas</p>
-                <p className="text-white/20 text-sm mt-2">Haz clic en el mapa para agregar puntos y guarda tu primera ruta</p>
+              <div className="text-center py-16 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-2xl">🗺️</div>
+                <p className="text-white/30 text-sm">Sin rutas guardadas</p>
+                <p className="text-white/20 text-xs max-w-[200px] leading-relaxed">Agrega puntos en el mapa y guarda tu primera ruta</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {routes.map((route) => (
+              <div className="flex flex-col gap-3">
+                {routes.map(route => (
                   <div
                     key={route.id}
-                    className={`bg-white/5 rounded-2xl p-4 border transition-all cursor-pointer ${
-                      selectedRoute === route.id
-                        ? "border-[#d4e9c7] bg-white/10"
-                        : "border-white/10 hover:border-white/20"
-                    }`}
+                    className={`rim-route-card ${selectedRoute === route.id ? "active" : ""}`}
                     onClick={() => handleLoadRoute(route)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white">{route.name}</h4>
-                        <p className="text-white/50 text-xs mt-1">
-                          {route.waypoints.length} puntos • {calculateTotalDistance(route.waypoints).toFixed(1)} km
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {route.waypoints.slice(0, 3).map(w => (
-                            <span key={w.id} className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-white/60">
-                              {w.name}
-                            </span>
-                          ))}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <span className="rim-dot mt-2 flex-shrink-0" style={{ background: route.color, boxShadow: `0 0 8px ${route.color}66` }} />
+                        <div>
+                          <p className="display-font text-white font-semibold text-sm leading-snug">{route.name}</p>
+                          <p className="text-white/35 text-xs mt-0.5">{route.waypoints.length} puntos · {calculateTotalDistance(route.waypoints).toFixed(1)} km</p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {route.waypoints.slice(0, 3).map(w => <span key={w.id} className="rim-tag">{w.name}</span>)}
+                            {route.waypoints.length > 3 && <span className="rim-tag">+{route.waypoints.length - 3}</span>}
+                          </div>
                         </div>
                       </div>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRoute(route.id);
-                        }}
-                        className="text-red-400 hover:text-red-300 p-2"
+                        onClick={e => { e.stopPropagation(); handleDeleteRoute(route.id); }}
+                        className="w-8 h-8 rounded-full bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/25 hover:text-red-400 hover:border-red-400/30 hover:bg-red-400/10 transition-all flex-shrink-0 text-sm"
                       >
-                        🗑️
+                        ×
                       </button>
                     </div>
                   </div>
@@ -549,44 +595,21 @@ export default function InteractiveRoutesMap({
               </div>
             )}
 
-            {/* Instructions */}
-            <div className="mt-8 bg-white/5 rounded-2xl p-4">
-              <h4 className="font-bold text-white text-sm mb-3">Cómo crear una ruta:</h4>
-              <ol className="text-white/50 text-xs space-y-2">
-                <li>1. Haz clic en el mapa para agregar puntos de inter&eacute;s</li>
-                <li>2. Completa la informaci&oacute;n de cada punto</li>
-                <li>3. Agrega al menos 2 puntos</li>
-                <li>4. Haz clic en Guardar Ruta para almacenarla</li>
+            {/* How-to */}
+            <div className="mt-8 bg-[#86efac]/[0.04] border border-[#86efac]/[0.10] rounded-2xl p-5">
+              <p className="display-font text-[#86efac]/70 text-[10px] uppercase tracking-widest mb-3 font-semibold">Cómo crear una ruta</p>
+              <ol className="space-y-2">
+                {["Toca el mapa para agregar puntos", "Completa el nombre y tipo de cada punto", "Necesitas al menos 2 puntos", "Usa el botón 'Guardar ruta' para almacenarla"].map((step, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-white/35 text-xs leading-relaxed">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.07] flex items-center justify-center text-[9px] text-white/40 font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                    {step}
+                  </li>
+                ))}
               </ol>
             </div>
           </div>
         </div>
       )}
-
-      {/* Trigger for save route modal */}
-      {waypoints.length >= 2 && !routeName && (
-        <div className="hidden">
-          {/* This is just to trigger the modal logic */}
-        </div>
-      )}
-
-      {/* Custom styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .leaflet-popup-content-wrapper {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-          }
-          .leaflet-popup-tip {
-            background: white;
-          }
-          .custom-marker {
-            background: transparent;
-            border: none;
-          }
-        `
-      }} />
-    </div>
+    </>
   );
 }
