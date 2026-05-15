@@ -17,8 +17,23 @@ import {
   Trees, 
   ArrowRight,
   Search,
-  Users
+  Users,
+  MapPin
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamic import with SSR disabled to avoid Leaflet SSR issues
+const GeolocationMap = dynamic(
+  () => import('../../src/components/GeolocationMap'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-[500px] w-full rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/10">
+        <div className="text-white/70 animate-pulse">Cargando mapa...</div>
+      </div>
+    )
+  }
+);
 
 const TABS = ["Todos", "Aventura", "Marketplace", "Sabores", "Chatbot", "Inicio de sesión"];
 
@@ -138,6 +153,43 @@ export default function AventuraPage() {
                 </div>
                 {/* ... resto del bento se mantiene igual ... */}
             </div>
+        </section>
+
+        {/* GEOLOCALIZACIÓN */}
+        <section className="py-24">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <MapPin className="text-[#d4e9c7]" size={28} />
+                <span className="text-[10px] font-black text-[#d4e9c7] uppercase tracking-[0.3em] bg-white/5 border border-white/10 px-4 py-2 rounded-full">
+                  Tu Ubicación
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-6">
+                Explora la Región
+              </h2>
+              <p className="text-white/60 text-lg font-serif italic">
+                Descubre tu posición en el corazón del bosque de niebla de Ixtaczoquitlán.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-xl p-4 rounded-[40px] border border-white/10 shadow-2xl">
+              <GeolocationMap 
+                center={[18.6533, -96.8267]}
+                zoom={14}
+                className="h-[500px] w-full rounded-3xl"
+                onLocationFound={(lat, lng) => {
+                  console.log(`Ubicación encontrada: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+                }}
+              />
+            </div>
+            
+            <div className="mt-8 text-center">
+              <p className="text-white/40 text-sm">
+                El mapa se centrará automáticamente en tu ubicación cuando otorgues permisos de geolocalización.
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* CTA FINAL */}
