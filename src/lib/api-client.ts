@@ -1,12 +1,13 @@
 // @/lib/api-client.ts
 
-const BASE_URL = 'https://ixtacproyect.alwaysdata.net/api';
+const BASE_URL = 'https://ixtacproyect.alwaysdata.net'; // Sin barra al final, sin "api"
 
 export const apiClient = {
   post: async <T>(endpoint: string, data: Record<string, unknown>): Promise<T> => {
-    // Asegura que la URL no tenga doble barra y termine en .php
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${BASE_URL}${cleanEndpoint}.php`; 
+    // Si endpoint viene como '/login', quitamos la barra inicial para mandar 'api/login'
+    // O si viene como 'login', le anteponemos 'api/'
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const url = `${BASE_URL}/api/${cleanEndpoint}`; // Resultado: https://ixtacproyect.alwaysdata.net/api/login
     
     const response = await fetch(url, {
       method: 'POST',
