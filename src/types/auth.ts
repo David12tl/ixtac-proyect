@@ -6,10 +6,17 @@ export interface UserSession {
 }
 
 export interface AuthResponse {
-  mensaje: string;
-  token: string;
-  // Soportamos ambas variantes de nombres de objeto para evitar fallos distributivos
+  status?: string | boolean;
+  message?: string;
+  mensaje?: string;
+  token?: string;
   user?: UserSession;
   usuario?: UserSession;
   error?: string;
+  // Soporte para respuestas envueltas en estructuras App\Helpers\Response
+  data?: {
+    token?: string;
+    user?: UserSession;
+    [key: string]: unknown;
+  };
 }

@@ -4,16 +4,22 @@ import { AuthResponse } from '../types/auth';
 
 export const authService = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
+    // Esto llamará internamente a BASE_URL + /api/login
     const response = await apiClient.post<AuthResponse>('/login', {
       email,
       password,
     });
     
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      // Compatible si el backend devuelve 'user' o 'usuario'
-      const userData = response.user || response.usuario;
-      localStorage.setItem('user', JSON.stringify(userData));
+    // Si tu backend usa un helper Response, el token podría venir directamente
+    // o dentro de response.data. Extraemos el token de forma segura:
+    const token = response.token || (response.data?.token);
+    const user = response.user || response.usuario || (response.data?.user);
+
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      }
     }
     
     return response;
@@ -26,10 +32,14 @@ export const authService = {
       password,
     });
     
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      const userData = response.user || response.usuario;
-      localStorage.setItem('user', JSON.stringify(userData));
+    const token = response.token || (response.data?.token);
+    const user = response.user || response.usuario || (response.data?.user);
+
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      }
     }
     
     return response;

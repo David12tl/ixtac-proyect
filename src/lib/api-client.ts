@@ -1,13 +1,14 @@
 // @/lib/api-client.ts
 
-const BASE_URL = 'https://ixtacproyect.alwaysdata.net'; // Sin barra al final, sin "api"
+const BASE_URL = 'https://ixtacproyect.alwaysdata.net';
 
 export const apiClient = {
   post: async <T>(endpoint: string, data: Record<string, unknown>): Promise<T> => {
-    // Si endpoint viene como '/login', quitamos la barra inicial para mandar 'api/login'
-    // O si viene como 'login', le anteponemos 'api/'
+    // Quitamos la barra inicial si existe para evitar rutas como api//login
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-    const url = `${BASE_URL}/api/${cleanEndpoint}`; // Resultado: https://ixtacproyect.alwaysdata.net/api/login
+    
+    // Construimos la URL exacta: https://ixtacproyect.alwaysdata.net/api/login
+    const url = `${BASE_URL}/api/${cleanEndpoint}`; 
     
     const response = await fetch(url, {
       method: 'POST',
@@ -20,7 +21,7 @@ export const apiClient = {
     const responseData = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(responseData.error || 'Error en la petición al servidor');
+      throw new Error(responseData.error || responseData.message || 'Error en el servidor');
     }
 
     return responseData as T;
