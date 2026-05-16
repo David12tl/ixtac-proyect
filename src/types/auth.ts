@@ -1,18 +1,15 @@
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  avatar?: string;
-  created_at?: string;
+// @/types/auth.ts
+
+export interface UserSession {
+  id: string;
+  role: number | string;
 }
 
 export interface AuthResponse {
-  user: User;
+  mensaje: string;
   token: string;
-  message?: string;
-}
-
-export interface ApiError {
-  message: string;
-  errors?: Record<string, string[]>;
+  // Soportamos ambas variantes de nombres de objeto para evitar fallos distributivos
+  user?: UserSession;
+  usuario?: UserSession;
+  error?: string;
 }

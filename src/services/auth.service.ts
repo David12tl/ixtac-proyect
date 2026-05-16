@@ -1,3 +1,4 @@
+// @/services/auth.service.ts
 import { apiClient } from '../lib/api-client';
 import { AuthResponse } from '../types/auth';
 
@@ -10,7 +11,9 @@ export const authService = {
     
     if (response.token) {
       localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // Compatible si el backend devuelve 'user' o 'usuario'
+      const userData = response.user || response.usuario;
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     
     return response;
@@ -25,24 +28,25 @@ export const authService = {
     
     if (response.token) {
       localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      const userData = response.user || response.usuario;
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     
     return response;
   },
 
-  logout: () => {
+  logout: (): void => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
   },
 
-  getCurrentUser: () => {
+  getCurrentUser: (): Record<string, unknown> | null => {
     if (typeof window === 'undefined') return null;
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
 
-  isAuthenticated: () => {
+  isAuthenticated: (): boolean => {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('auth_token');
   }
