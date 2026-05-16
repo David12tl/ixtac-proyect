@@ -24,7 +24,6 @@ export default function LoginPage() {
       await authService.login(email, password);
       router.push('/'); 
     } catch (err) {
-      // TypeScript prefiere que tratemos a 'err' como un objeto desconocido primero
       const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión. Por favor intenta de nuevo.';
       setError(errorMessage);
     } finally {
@@ -98,28 +97,46 @@ export default function LoginPage() {
                 )}
               </AnimatePresence>
 
+              {/* INPUT DE EMAIL CORREGIDO */}
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-widest text-emerald-900 ml-2">Email</label>
+                <label 
+                  htmlFor="email-input" 
+                  className="text-[9px] font-black uppercase tracking-widest text-emerald-900 ml-2 cursor-pointer"
+                >
+                  Email
+                </label>
                 <input 
+                  id="email-input"
+                  name="email"
                   type="email" 
                   value={email}
                   disabled={isLoading}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="tu@email.com"
+                  autoComplete="email"
                   className="w-full bg-stone-50 border border-stone-100 px-5 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500/10 focus:bg-white outline-none transition-all text-sm text-[#061b0e] disabled:opacity-50"
                 />
               </div>
 
+              {/* INPUT DE PASSWORD CORREGIDO */}
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-widest text-emerald-900 ml-2">Password</label>
+                <label 
+                  htmlFor="password-input" 
+                  className="text-[9px] font-black uppercase tracking-widest text-emerald-900 ml-2 cursor-pointer"
+                >
+                  Password
+                </label>
                 <input 
+                  id="password-input"
+                  name="password"
                   type="password" 
                   value={password}
                   disabled={isLoading}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full bg-stone-50 border border-stone-100 px-5 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500/10 focus:bg-white outline-none transition-all text-sm text-[#061b0e] disabled:opacity-50"
                 />
               </div>
